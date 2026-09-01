@@ -1,0 +1,26 @@
+{
+  "submissionId": "MTH31F0DZNORG0",
+  "submitted": "2026-09-09T08:15:27.805Z",
+  "event": "Asia AI Champions Network Kickoff",
+  "eventDates": "8-9 September 2026",
+  "name": "Horace Cheung",
+  "role": "Regional Champion Lead",
+  "functionName": "Finance",
+  "market": "Hong Kong",
+  "answerCount": 6,
+  "sections": [
+    {
+      "section": "Day 1 - Your 30-day adoption plan",
+      "answers": [
+        { "key": "d1-aud", "question": "Target audience - who exactly?", "answer": "Finance team, Hong Kong regional office" }
+      ]
+    },
+    {
+      "section": "Day 2 - From AI idea to measurable business value",
+      "answers": [
+        { "key": "d2-v1", "question": "1 - The problem", "answer": "Variance commentary takes three analysts two days" }
+      ]
+    }
+  ],
+  "markdown": "# Manulife Asia AI Champions Kickoff\n\nName: Horace Cheung\n"
+}
