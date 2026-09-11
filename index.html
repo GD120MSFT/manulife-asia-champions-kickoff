@@ -749,7 +749,8 @@ body.room-mode{background:#08301F}
     <p class="sub">Your interactive playbook for 8&ndash;9 September 2026, Hong Kong.
        Enter the passphrase from your session invite.</p>
     <label for="pw">Passphrase</label>
-    <input id="pw" type="password" autocomplete="off" spellcheck="false" placeholder="From your invite">
+    <input id="pw" type="password" autocomplete="off" spellcheck="false"
+           autocapitalize="off" autocorrect="off" placeholder="From your invite">
     <button id="unlock" type="button">Open the playbook</button>
     <p class="gate-err" id="gerr"></p>
     <div class="gate-foot">
@@ -773,11 +774,42 @@ async function decryptPayload(pass){
   return JSON.parse(new TextDecoder().decode(pt));
 }
 const gerr = document.getElementById('gerr');
+
+/* Pasting the passphrase out of an invite drags along invisible damage: a
+   trailing space or newline, a non-breaking space, or a hyphen that the mail
+   client autocorrected into an en dash. Each one produced a hard failure
+   against an otherwise correct passphrase, so try the repaired forms too. */
+function passVariants(raw){
+  const cleaned = String(raw == null ? '' : raw)
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/[\u00A0\u2007\u202F]/g, ' ')
+    .trim();
+  const straightened = cleaned
+    .replace(/[\u2010-\u2015\u2212]/g, '-')
+    .replace(/[\u2018\u2019\u201B\u2032]/g, "'")
+    .replace(/[\u201C\u201D\u2033]/g, '"');
+  const out = [];
+  for(const v of [cleaned, straightened, straightened.replace(/\s+/g, '')]){
+    if(v && out.indexOf(v) === -1) out.push(v);
+  }
+  return out;
+}
+
 async function tryUnlock(pass, silent){
+  const cands = passVariants(pass);
+  if(!cands.length){
+    if(!silent){ gerr.textContent = 'Enter the passphrase from your session invite.'; }
+    else { document.getElementById('gate').style.display = 'flex'; }
+    return;
+  }
   gerr.textContent = silent ? '' : 'Checking\u2026';
-  try{
-    const d = await decryptPayload(pass);
-    sessionStorage.setItem('mlf-asia-key', pass);
+  let d = null, accepted = null;
+  for(const c of cands){
+    try{ d = await decryptPayload(c); accepted = c; break; }
+    catch(e){ /* try the next repaired form */ }
+  }
+  if(d){
+    sessionStorage.setItem('mlf-asia-key', accepted);
     document.getElementById('gate').remove();
     const app = document.getElementById('app');
     app.innerHTML = d.html;
@@ -785,8 +817,11 @@ async function tryUnlock(pass, silent){
     const s = document.createElement('script');
     s.textContent = d.js;
     document.body.appendChild(s);
-  } catch(e){
-    if(!silent){ gerr.textContent = 'That passphrase did not work. Check your session invite.'; }
+  } else {
+    if(!silent){
+      gerr.textContent = 'That passphrase did not work. It is case-sensitive \u2014 '
+        + 'try typing it out rather than pasting it.';
+    }
     else { document.getElementById('gate').style.display = 'flex'; }
   }
 }
